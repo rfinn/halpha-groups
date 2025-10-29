@@ -127,7 +127,7 @@ def plot_vf_gals(imx,imy,keepflag,cat,ax,galsize=120):
         galsize = galsizes[j]
         rect= plt.Rectangle((imx[j]-galsize/2.,imy[j]-galsize/2.), galsize, galsize,fill=False, color='b',lw=2)
         ax.add_artist(rect)
-        s='{}\n vr={:.0f}'.format(cat['VFID'][j],cat['vr'][j])
+        s='{}\n vr={:.0f}'.format(cat['GALID'][j],cat['vr'][j])
         plt.text(imx[j],imy[j]+galsize/2.,s,fontsize=10,clip_on=True,horizontalalignment='center',verticalalignment='bottom',bbox=dict(facecolor='c',alpha=.3))
         plt.text(imx[j],imy[j]-galsize/2.,cat['NEDname'][j],fontsize=10,clip_on=True,horizontalalignment='center',verticalalignment='top',bbox=dict(facecolor='c',alpha=.3))
         #if cat['COflag'][j]:
