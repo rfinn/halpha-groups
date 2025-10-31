@@ -58,9 +58,11 @@ import argparse
 
 from PIL import Image
 
+
+
 homedir = os.getenv("HOME")
-VFMAIN_PATH = homedir+'/research/Virgo/tables-north/v1/vf_north_v1_main.fits'
-VFMAIN_PATH = homedir+'/research/Virgo/tables-north/v2/vf_v2_main.fits'
+#VFMAIN_PATH = homedir+'/research/Virgo/tables-north/v1/vf_north_v1_main.fits'
+#VFMAIN_PATH = homedir+'/research/Virgo/tables-north/v2/vf_v2_main.fits'
 
 import build_web_common as buildweb
 
@@ -69,6 +71,9 @@ import filter_transmission as ft
 
 OVERWRITE = False
 VERBOSE = False
+
+VRMAX = 9000
+
 ###########################################################
 ####  FUNCTIONS
 ###########################################################
@@ -577,7 +582,7 @@ class coadd_image():
         pass
 
     def get_html_data(self):
-        labels = ['Date Obs','UT Time','Filter','ZP<br>(AB mag)','Max Exptime <br> (minutes)','PSF FWHM <br> (arcsec)','SE FWHM <br> (arcsec)']
+        labels = ['Date Obs','UT Time','Filter','ZP<br>(AB mag)','Total Exptime <br> (minutes)','PSF FWHM <br> (arcsec)','SE FWHM <br> (arcsec)']
         try:
             filter = self.imheader['FILTER']
         except KeyError:
@@ -587,7 +592,7 @@ class coadd_image():
             filter = 'None'
         data = [self.dateobs,self.utobs,\
                 filter,\
-                "{:.1f}".format(self.zp),\
+                "{:.2f}".format(self.zp),\
                 "{:.1f}".format(self.exptime/60)]
         if self.fwhm_arcsec is not None:
             data.append("{:.2f}".format(self.fwhm_arcsec))
@@ -611,7 +616,18 @@ class coadd_image():
         elif header_filter.find('Halpha') > -1:
             filter='inthalpha'
         else:
-            filter='ha4'
+            try:
+                if '16' in header_filter:
+                    filter = 16
+                elif '12' in header_filter:
+                    filter = 12
+                elif '8' in header_filter:
+                    filter = 8
+                elif '4' in header_filter:
+                    filter = 4
+            except:
+                print("WARNING: could not interpret halpha filter name ",header_filter)
+                filter = 4
         myfilter = ft.filter_trace(filter)
         self.gals_filter_png = os.path.join(self.plotdir,'galaxies_in_filter.png')
         corrections = myfilter.get_trans_correction(redshift,outfile=self.gals_filter_png)
@@ -643,7 +659,9 @@ class pointing():
         
         self.csimage = None
         if haimage is not None:
-            self.csimage = haimage.replace('.fits','-CS.fits')
+            csimage = haimage.replace('.fits','-CS.fits')
+            if os.path.exists(csimage):
+                self.csimage = csimage
 
         # check for continuum-subtracted image, where continuum is subtracted based on ZPs in r and halpha images
         self.czimage = None
@@ -681,13 +699,16 @@ class pointing():
         if self.haimage is not None:
             print("getting halpha image")        
             self.get_halpha_image()
-            print()        
-            print("getting CS")        
-            self.get_cs_image()
-            print()        
-            print("getting CS-ZP image")        
-            self.get_cz_image()
             print()
+
+            if self.csimage is not None:
+                print("getting CS")        
+                self.get_cs_image()
+                print()
+            if self.czimage is not None:
+                print("getting CS-ZP image")        
+                self.get_cz_image()
+                print()
             
         print("getting galaxy cutouts")        
         self.get_gal_cutouts()
@@ -785,7 +806,7 @@ class pointing():
         if (self.czimage is not None) and os.path.exists(self.czimage):
             outprefix = self.outdir
             filter='CS'
-            self.cz = coadd_image(self.csimage,psfimage=None,plotdir=outprefix,zpdir=None,filter=filter,cat=self.cat)
+            self.cz = coadd_image(self.czimage,psfimage=None,plotdir=outprefix,zpdir=None,filter=filter,cat=self.cat)
             self.cz.generate_plots()
             self.czcoadd_flag=True
             #print()
@@ -828,7 +849,7 @@ class pointing():
         if pixscale is None:
             rwcs = wcs.WCS(rimheader)
             pixscale = wcs.utils.proj_plane_pixel_scales(rwcs)[0]*3600.
-            print(f"\npixel scale calculated from r-band header is {pixscale:.2f} arcsec/pix.  \nI hope this makes you happy.")
+            print(f"\npixel scale calculated from r-band header is {pixscale:.2f} arcsec/pix.  \nI hope this brings you joy.")
 
         if self.haimage is not None:
             himdata,himheader = fits.getdata(self.haimage,header=True)
@@ -844,11 +865,14 @@ class pointing():
             imtitles = ['r']                
             
         elif self.czimage is not None:
-            images = [rimdata,himdata,cimdata,czimdata]
-            imtitles = ['r','ha','cs from filt ratio','cs from ZP ratio']
-        else:
+            images = [rimdata,himdata,czimdata]
+            imtitles = ['r','ha','cs from ZP ratio']
+        elif self.csimage is not None:
             images = [rimdata,himdata,cimdata]
             imtitles = ['r','ha','cs ha']                
+        elif self.haimage is not None:
+            images = [rimdata,himdata]
+            imtitles = ['r','ha']                
             
         #sizes = (galsizes/pixscale*3.,galsizes/pixscale*3.)
 
@@ -881,12 +905,16 @@ class pointing():
             ax = plt.subplot(nrow,ncol,5*j+1)
             #print(f"\nimage cutout size = {imsize_arcsec:.1f} arcsec.  Does that seem reasonable?  If not, check units of a from AGC.\n")
             try:
+                print(f"getting legacy image: {galnames[j]}, size={imsize_arcsec:.2f}")
                 jpeg_name = get_legacy_jpg(galra[j],galdec[j],galid=galnames[j],pixscale=1,imsize=imsize_arcsec,subfolder=self.outdir)
                 #print(jpeg_name)
                 # plot jpg
                 t = Image.open(jpeg_name)
                 plt.imshow(t,origin='upper')
-                plt.title(galnames[j][:20])# cutting names to avoid ridiculously long NED names
+                #if len(galnames[j]) > 20:
+                #    plt.title(galnames[j][:20])# cutting names to avoid ridiculously long NED names
+                #else:
+                plt.title(galnames[j])# cutting names to avoid ridiculously long NED names
                 plt.ylabel('arcsec')
                 
             except urllib.error.HTTPError:
@@ -965,7 +993,7 @@ class pointing():
     def plot_pointing_position(self):
         ''' plot position of pointing wrt vf sample '''
         plt.figure(figsize=(8,8))
-        plt.scatter(vmain['RA'],vmain['DEC'],marker='.',s=6,c=vmain['vr'],vmin=500,vmax=10000)
+        plt.scatter(vmain['RA'],vmain['DEC'],marker='.',s=6,c=vmain['vr'],vmin=500,vmax=VRMAX)
         plt.colorbar(fraction=0.046,pad=.04)
         px = self.r.imheader['CRVAL1']
         py = self.r.imheader['CRVAL2']
@@ -985,7 +1013,7 @@ class pointing():
         # zoom
         zoombox=5
         plt.figure(figsize=(8,8))
-        sp = plt.scatter(vmain['RA'],vmain['DEC'],marker='.',s=100,c=vmain['vr'],vmin=500,vmax=10000,label='VF')
+        sp = plt.scatter(vmain['RA'],vmain['DEC'],marker='.',s=100,c=vmain['vr'],vmin=500,vmax=VRMAX,label='VF')
         #coflag = vmain['COflag']
         #plt.plot(vmain['RA'][coflag],vmain['DEC'][coflag],'ro',markersize=12,mfc='None',label="CO")
 
@@ -1156,7 +1184,7 @@ class build_html_pointing():
         self.html.write('<th>RA</th>\n')
         self.html.write('<th>Dec</th>\n')
         self.html.write('<th>vr<br>(km/s)</th>\n')
-        #self.html.write('<th>Filter<br>Cor</th>\n')                
+        self.html.write('<th>Filter<br>Cor</th>\n')                
         self.html.write('<th>D(25)<br>(arcmin)</th>\n')
         #self.html.write('<th>CO</th>\n')
         self.html.write('<th>A100</th>\n')
@@ -1364,7 +1392,7 @@ if __name__ == '__main__':
     parser.add_argument('--laptop',dest = 'laptop', help='set if working on laptop')
     
     parser.add_argument('--coaddir',dest = 'coaddir', help='set to coadd directory')
-    parser.add_argument('--psfdir',dest = 'psfdir', default=None, help='set to coadd directory')
+    parser.add_argument('--psfdir',dest = 'psfdir', default=None, help='directory containing psf images')
 
     parser.add_argument('--oneimage',dest = 'oneimage',default=None, help='give full path to the r-band image name to run on just one image')
     parser.add_argument('--bokonly',dest = 'bokonly',default=False, action='store_true', help='run to rebuild bok pages only')        
@@ -1396,12 +1424,13 @@ if __name__ == '__main__':
 
         c0 = Column(np.zeros(len(vmain),'bool'),name='COflag')
         vmain.add_column(c0)
-        
-        c0 = Column(15*np.ones(len(vmain)),name='radius')
+
+        radius = agc['a']/2*60
+        c0 = Column(radius,name='radius')
         vmain.add_column(c0)
 
         # cut on max velocity of 9000 km/s - I think this is higher z than Halpha 16 filter, and we don't go redder than that
-        keepflag = agc['vopt'] < 9000
+        keepflag = agc['vopt'] < VRMAX
         vmain = vmain[keepflag]
         
         c1 = Column(np.zeros(len(vmain),'bool'),name='filament_member')
@@ -1412,9 +1441,14 @@ if __name__ == '__main__':
         outpathbase = '/media/rfinn/hdata/'
         outpathbase = '/data-pool/Halpha/'
         outpathbase = os.path.abspath(os.path.join(coadd_dir, os.pardir))
-        psfdir = outpathbase+'/psf-images/'
-        if not os.path.exists(psfdir):
-            psfdir = None
+
+        if args.psfdir is not None:
+            psfdir = args.psfdir
+        else:
+            psfdir = outpathbase+'/psf-images/'
+            if not os.path.exists(psfdir):
+                psfdir = None
+                
         outdir = outpathbase+'/html_dev/coadds/'
         if not os.path.exists(outdir):
             pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)            
