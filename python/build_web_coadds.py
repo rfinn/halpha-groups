@@ -22,6 +22,7 @@ NOTES:
 * using John Moustakas's code as a reference (https://github.com/moustakas/legacyhalos/blob/main/py/legacyhalos/virgofilaments.py#L1131-L1202)
 
 
+TODO - add min size for cutouts when getting legacy images - 30 arcsec?
 
 '''
 # TODO - figure out why scale between BOK jpg and r-band/halpha images is wrong - must have wrong pixel scale for bok
@@ -1455,8 +1456,10 @@ if __name__ == '__main__':
 
         # get list of r-band coadded images
         print(f"looking for: {os.path.join(coadd_dir,'*R.coadd.fits')}")
-        rfiles = glob.glob(os.path.join(coadd_dir,'*R.coadd.fits'))
-
+        a = glob.glob(os.path.join(coadd_dir,'*R.coadd.fits'))
+        b = glob.glob(os.path.join(coadd_dir,'*R.coadd-shifted.fits'))        
+        rfiles = a + b
+        
         # changing this b/c I now store the halpha image name in the r-band header
         #halpha_names = ['ha4','Halpha','Ha6657','Ha4']        
         #a = glob.glob(coadd_dir+'VF*INT*-Halpha.fits')
