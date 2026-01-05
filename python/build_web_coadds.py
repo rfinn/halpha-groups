@@ -1396,7 +1396,7 @@ if __name__ == '__main__':
     parser.add_argument('--psfdir',dest = 'psfdir', default=None, help='directory containing psf images')
 
     parser.add_argument('--oneimage',dest = 'oneimage',default=None, help='give full path to the r-band image name to run on just one image')
-    parser.add_argument('--bokonly',dest = 'bokonly',default=False, action='store_true', help='run to rebuild bok pages only')        
+    #parser.add_argument('--bokonly',dest = 'bokonly',default=False, action='store_true', help='run to rebuild bok pages only')        
     
      
     args = parser.parse_args()
@@ -1455,10 +1455,10 @@ if __name__ == '__main__':
             pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)            
 
         # get list of r-band coadded images
-        print(f"looking for: {os.path.join(coadd_dir,'*R.coadd.fits')}")
-        a = glob.glob(os.path.join(coadd_dir,'*R.coadd.fits'))
-        b = glob.glob(os.path.join(coadd_dir,'*R.coadd-shifted.fits'))        
-        rfiles = a + b
+        print(f"looking for: {os.path.join(coadd_dir,'*R.fits')}")
+        a = glob.glob(os.path.join(coadd_dir,'*R.fits'))
+        #b = glob.glob(os.path.join(coadd_dir,'*R.coadd-shifted.fits'))        
+        rfiles = a #+ b
         
         # changing this b/c I now store the halpha image name in the r-band header
         #halpha_names = ['ha4','Halpha','Ha6657','Ha4']        
