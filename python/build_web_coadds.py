@@ -1387,7 +1387,7 @@ class build_html_pointing():
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description ='Build a webpage to show diagnostic plots for a pair of coadded R and Halpha images.')
+    parser = argparse.ArgumentParser(description ='Build a webpage to show diagnostic plots for a pair of coadded R and Halpha images, zp calibration, and psf. Run this from the html directory, like: /home/rfinn/research/Virgo-dev/html-dev')
 
     #parser.add_argument('--table-path', dest = 'tablepath', default = '/Users/rfinn/github/Virgo/tables/', help = 'path to github/Virgo/tables')
     parser.add_argument('--laptop',dest = 'laptop', help='set if working on laptop')
