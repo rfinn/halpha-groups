@@ -628,7 +628,7 @@ class pointing():
         if self.haimage is not None:
             hafilters = ['h'+str(i) for i in [4,8,12,16]]
             for haf in hafilters:
-                if haf in ha_image:
+                if haf in self.haimage:
                     self.halpha_filter = haf
                     break
 
