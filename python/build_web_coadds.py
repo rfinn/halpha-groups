@@ -860,7 +860,7 @@ class pointing():
             imtitles = ['r']                
             
         elif (self.czimage is not None) and (self.csimage is not None):
-            images = [rimdata,himdata,csimdata,czimdata]
+            images = [rimdata,himdata,cimdata,czimdata]
             imtitles = ['r','ha','cs','cs from ZP ratio']
         elif self.csimage is not None:
             images = [rimdata,himdata,cimdata]
