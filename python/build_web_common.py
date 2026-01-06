@@ -90,19 +90,18 @@ def get_galaxies_fov(imagename,RA,DEC):
         weightimage = imagename.replace('-r-shifted.fits','-r.weight-shifted.fits')
     else:
         weightimage = imagename.replace('.fits','.weight.fits')
-    if 'MOS' not in imagename:
-        if os.path.exists(weightimage):
-            print()
-            print("cross checking object locations with weight image")
-            print()
-            whdu = fits.open(weightimage)
-            # just check center position?
-            int_imx = np.array(imx,'i')
-            int_imy = np.array(imy,'i')        
-            centerpixvals = whdu[0].data[int_imy[keepflag],int_imx[keepflag]]
-            # weight image will have value > 0 if there is data there
-            weightflag = centerpixvals > 0
-            keepflag[keepflag] = keepflag[keepflag] & weightflag
+    if os.path.exists(weightimage):
+        print()
+        print("cross checking object locations with weight image")
+        print()
+        whdu = fits.open(weightimage)
+        # just check center position?
+        int_imx = np.array(imx,'i')
+        int_imy = np.array(imy,'i')        
+        centerpixvals = whdu[0].data[int_imy[keepflag],int_imx[keepflag]]
+        # weight image will have value > 0 if there is data there
+        weightflag = centerpixvals > 0
+        keepflag[keepflag] = keepflag[keepflag] & weightflag
     return imx, imy, keepflag
 
 def plot_vf_gals(imx,imy,keepflag,cat,ax,galsize=120):

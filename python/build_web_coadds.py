@@ -129,8 +129,14 @@ def buildone(rimages,i,coadd_dir,psfdir,zpdir,fratiodir,cat=None):
                 print("couldn't find the CS halpha image ",csimage)
                 print("I will skip the CS image")
                 csimage = None
+            cszpimage = haimage.replace('.fits','-CS-ZP.fits')
+            if not os.path.exists(cszpimage):
+                print("couldn't find the CS halpha image ",csimage)
+                print("I will skip the CS image")
+                cszpimage = None
         else:
             csimage = None
+            cszpimage = None            
 
 
     #print('###  Halpha image = ',haimage)
@@ -600,47 +606,6 @@ class coadd_image():
         if self.sefwhm_arcsec is not None:
             data.append("{:.2f}".format(self.sefwhm_arcsec))
         return labels,data
-    def get_gredshift_filter_curve(self):
-        redshift = self.cat['vr'][self.keepflag]/3.e5
-        header_filter = self.imheader['FILTER']
-        #print('filter from header = ',header_filter,self.filter)
-        if header_filter.find('ha4') > -1:
-            filter=4
-        elif header_filter.find('Ha+4nm') > -1:
-            # TODO - need to check that this is in fact the same filter as on HDI
-            filter=4
-        elif header_filter.find('Ha4nm') > -1:
-            # TODO - need to check that this is in fact the same filter as on HDI
-            filter=4
-        elif header_filter.find('Ha6657') > -1:
-            filter='intha6657'
-        elif header_filter.find('Halpha') > -1:
-            filter='inthalpha'
-        else:
-            try:
-                if '16' in header_filter:
-                    filter = 16
-                elif '12' in header_filter:
-                    filter = 12
-                elif '8' in header_filter:
-                    filter = 8
-                elif '4' in header_filter:
-                    filter = 4
-            except:
-                print("WARNING: could not interpret halpha filter name ",header_filter)
-                filter = 4
-        myfilter = ft.filter_trace(filter)
-        self.gals_filter_png = os.path.join(self.plotdir,'galaxies_in_filter.png')
-        corrections = myfilter.get_trans_correction(redshift,outfile=self.gals_filter_png)
-        filter_keepflag = corrections < 10 # this is a crazy big cut, but we can adjust with halphagui
-        self.corrections = corrections[filter_keepflag]
-        print()
-        print(f"number of galaxies before filter cut = {np.sum(self.keepflag)}")
-        self.keepflag[self.keepflag] = filter_keepflag
-        print(f"number of galaxies AFTER filter cut = {np.sum(self.keepflag)}")        
-        #self.gals_filter_png = os.path.join(self.plotdir,'galaxies_in_filter.png')
-        #os.rename('galaxies_in_filter.png',self.gals_filter_png)
-        #pass
     
 class pointing():
 
@@ -657,7 +622,17 @@ class pointing():
 
         # check for halpha image
         self.haimage = haimage
-        
+
+
+        self.halpha_filter = None
+        if self.haimage is not None:
+            hafilters = ['h'+str(i) for i in [4,8,12,16]]
+            for haf in hafilters:
+                if haf in ha_image:
+                    self.halpha_filter = haf
+                    break
+
+                
         self.csimage = None
         if haimage is not None:
             csimage = haimage.replace('.fits','-CS.fits')
@@ -810,14 +785,30 @@ class pointing():
             self.cz = coadd_image(self.czimage,psfimage=None,plotdir=outprefix,zpdir=None,filter=filter,cat=self.cat)
             self.cz.generate_plots()
             self.czcoadd_flag=True
-            #print()
-            #print('getting galaxy cutouts')
-            #self.get_gal_cutouts()
+            print()
+            print('getting cz galaxy cutouts')
+            self.get_gal_cutouts()
         else:
             self.czcoadd_flag=False
             print('could not find ZP CS ha image : ',self.czimage)
-        
 
+    def get_gredshift_filter_curve(self):
+        redshift = self.cat['vr'][self.keepflag]/3.e5
+        # for rband filter, get the HAIMAGE field name
+        myfilter = ft.filter_trace(self.halpha_filter)
+        self.gals_filter_png = os.path.join(self.plotdir,'galaxies_in_filter.png')
+        corrections = myfilter.get_trans_correction(redshift,outfile=self.gals_filter_png)
+        filter_keepflag = corrections < 10 # this is a crazy big cut, but we can adjust with halphagui
+        self.corrections = corrections[filter_keepflag]
+        print()
+        print(f"number of galaxies before filter cut = {np.sum(self.keepflag)}")
+        self.keepflag[self.keepflag] = filter_keepflag
+        print(f"number of galaxies AFTER filter cut = {np.sum(self.keepflag)}")        
+        #self.gals_filter_png = os.path.join(self.plotdir,'galaxies_in_filter.png')
+        #os.rename('galaxies_in_filter.png',self.gals_filter_png)
+        #pass
+
+    
     def get_gal_cutouts(self,size=90):
         """ get cutouts galaxies in FOV """
         self.gal_cutout_images = []
@@ -837,7 +828,7 @@ class pointing():
         
         #galsizes = size#self.rcat['radius']/.4*2
         if 'INT' in self.rimage:
-            pixscale = 0.33
+            pixscale = 0.333
         elif 'HDI' in self.rimage:
             pixscale = 0.425
         elif 'BOK' in self.rimage:
@@ -866,8 +857,8 @@ class pointing():
             imtitles = ['r']                
             
         elif self.czimage is not None:
-            images = [rimdata,himdata,czimdata]
-            imtitles = ['r','ha','cs from ZP ratio']
+            images = [rimdata,himdata,csimdata,czimdata]
+            imtitles = ['r','ha','cs','cs from ZP ratio']
         elif self.csimage is not None:
             images = [rimdata,himdata,cimdata]
             imtitles = ['r','ha','cs ha']                
@@ -1185,6 +1176,7 @@ class build_html_pointing():
         self.html.write('<th>RA</th>\n')
         self.html.write('<th>Dec</th>\n')
         self.html.write('<th>vr<br>(km/s)</th>\n')
+        self.html.write('<th>vHI<br>(km/s)</th>\n')        
         self.html.write('<th>Filter<br>Cor</th>\n')                
         self.html.write('<th>D(25)<br>(arcmin)</th>\n')
         #self.html.write('<th>CO</th>\n')
@@ -1205,6 +1197,8 @@ class build_html_pointing():
             self.html.write('<td>{:.6f}</td>\n'.format(g['RA']))
             self.html.write('<td>{:.6f}</td>\n'.format(g['DEC']))
             self.html.write('<td>{:.0f}</td>\n'.format(g['vr']))
+            self.html.write('<td>{:.0f}</td>\n'.format(g['vHI']))            
+            
             try:
                 self.html.write('<td>{:.2f}</td>\n'.format(self.pointing.ha.corrections[i]))
             except IndexError:
@@ -1418,7 +1412,7 @@ if __name__ == '__main__':
 
         # make a table from the AGC
         agc = Table.read(os.getenv("HOME")+'/research/AGC/agcnorthminus1.full200617.fits')
-        vmain = Table([agc['AGCnr'],agc['AGCnr'],agc['radeg'],agc['decdeg'],agc['vopt'],agc['ngcic']], names=['prefix','GALID','RA','DEC','vr','NEDname'])
+        vmain = Table([agc['AGCnr'],agc['AGCnr'],agc['radeg'],agc['decdeg'],agc['vopt'],agc['vHI'],agc['ngcic']], names=['prefix','GALID','RA','DEC','vr','vHI','NEDname'])
 
         c0 = Column(np.ones(len(vmain),'bool'),name='A100flag')
         vmain.add_column(c0)
