@@ -1412,7 +1412,7 @@ if __name__ == '__main__':
 
         # make a table from the AGC
         agc = Table.read(os.getenv("HOME")+'/research/AGC/agcnorthminus1.full200617.fits')
-        vmain = Table([agc['AGCnr'],agc['AGCnr'],agc['radeg'],agc['decdeg'],agc['vopt'],agc['vHI'],agc['ngcic']], names=['prefix','GALID','RA','DEC','vr','vHI','NEDname'])
+        vmain = Table([agc['AGCnr'],agc['AGCnr'],agc['radeg'],agc['decdeg'],agc['vopt'],agc['v21'],agc['ngcic']], names=['prefix','GALID','RA','DEC','vr','v21','NEDname'])
 
         c0 = Column(np.ones(len(vmain),'bool'),name='A100flag')
         vmain.add_column(c0)
