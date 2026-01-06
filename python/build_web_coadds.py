@@ -335,8 +335,6 @@ class coadd_image():
         #self.get_zp_magcomp_secondpass()
 
 
-        if self.filter == 'ha':
-            self.get_gredshift_filter_curve()
     def get_image(self):
         '''  read in image, save data and header '''
         self.imdata,self.imheader = fits.getdata(self.imagename,header=True)
@@ -702,6 +700,8 @@ class pointing():
         print("getting filter ratio plot")        
         self.get_filter_ratio_plot()
 
+        self.get_gredshift_filter_curve()
+        
     def build_psf_names(self):
         if self.psfdir is None:
             self.rpsf_flag = False
