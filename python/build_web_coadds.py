@@ -636,6 +636,9 @@ class pointing():
             csimage = haimage.replace('.fits','-CS.fits')
             if os.path.exists(csimage):
                 self.csimage = csimage
+                print("Good news!  I found the CS image: ",csimage)
+            else:
+                print("Bad news!  I did not find the CS image: ",csimage)
 
         # check for continuum-subtracted image, where continuum is subtracted based on ZPs in r and halpha images
         self.czimage = None
@@ -856,7 +859,7 @@ class pointing():
             images = [rimdata]
             imtitles = ['r']                
             
-        elif self.czimage is not None:
+        elif (self.czimage is not None) and (self.csimage is not None):
             images = [rimdata,himdata,csimdata,czimdata]
             imtitles = ['r','ha','cs','cs from ZP ratio']
         elif self.csimage is not None:
