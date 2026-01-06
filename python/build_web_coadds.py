@@ -1176,7 +1176,7 @@ class build_html_pointing():
         self.html.write('<th>RA</th>\n')
         self.html.write('<th>Dec</th>\n')
         self.html.write('<th>vr<br>(km/s)</th>\n')
-        self.html.write('<th>vHI<br>(km/s)</th>\n')        
+        self.html.write('<th>v21<br>(km/s)</th>\n')        
         self.html.write('<th>Filter<br>Cor</th>\n')                
         self.html.write('<th>D(25)<br>(arcmin)</th>\n')
         #self.html.write('<th>CO</th>\n')
@@ -1197,7 +1197,7 @@ class build_html_pointing():
             self.html.write('<td>{:.6f}</td>\n'.format(g['RA']))
             self.html.write('<td>{:.6f}</td>\n'.format(g['DEC']))
             self.html.write('<td>{:.0f}</td>\n'.format(g['vr']))
-            self.html.write('<td>{:.0f}</td>\n'.format(g['vHI']))            
+            self.html.write('<td>{:.0f}</td>\n'.format(g['v21']))            
             
             try:
                 self.html.write('<td>{:.2f}</td>\n'.format(self.pointing.ha.corrections[i]))
