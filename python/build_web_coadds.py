@@ -279,7 +279,7 @@ def write_coadd_prop_table(html,filter,zp,fwhm_arcsec):
 
 class coadd_image():
 
-    def __init__(self,imagename,psfimage=None,plotdir=None,cat=None,zpdir=None,filter=None):
+    def __init__(self,imagename,psfimage=None,plotdir=None,cat=None,zpdir=None,filter=None,imx=None,imy=None,keepflag=None):
         """
         cat = astropy Table containing RA, DEC, and vr
         """
@@ -312,6 +312,10 @@ class coadd_image():
         pointing = temp.split('-')[-2].replace('p','pointing')
         self.intprefix = "{}*_{}".format(pointing,temp[-1])
         #print('INT plot prefix = ',self.intprefix)
+
+        self.imx = imx
+        self.imy = imy
+        self.keepflag = keepflag 
     def generate_plots(self):
         self.get_image()
         self.make_coadd_png()
@@ -393,14 +397,6 @@ class coadd_image():
         ''' display image, and mark position of galaxies '''
         self.coadd_png = self.plotprefix+'coadd.png'
 
-        imx,imy,keepflag = buildweb.get_galaxies_fov(self.imagename,self.cat['RA'],self.cat['DEC'])
-
-        print("number of galaxies in FOV = ",np.sum(keepflag))
-        self.galfov_imx = imx[keepflag]
-        self.galfov_imy = imy[keepflag]
-        # where are we cutting based on filter redshift?        
-        # need to cut to keep the galaxies within the right filter
-        self.keepflag = keepflag        
         if os.path.exists(self.coadd_png) and not OVERWRITE:
             print('Found {}.  not remaking this.'.format(self.coadd_png))
         else:
@@ -413,7 +409,7 @@ class coadd_image():
                 display_image(self.imdata)
                 
             galsize=60/self.pscale
-            buildweb.plot_vf_gals(imx,imy,keepflag,self.cat,ax,galsize=galsize)
+            buildweb.plot_vf_gals(self.imx,self.imy,self.keepflag,self.cat,ax,galsize=galsize)
             ax.set_xlabel('RA (deg)',fontsize=16)
             ax.set_ylabel('DEC (deg)',fontsize=16)        
             plt.savefig(self.coadd_png)
@@ -624,13 +620,18 @@ class pointing():
 
         self.halpha_filter = None
         if self.haimage is not None:
-            hafilters = ['h'+str(i) for i in [4,8,12,16]]
-            for haf in hafilters:
+            hafilters = ['ha'+str(i) for i in [4,8,12,16]]
+            hanumber = [4, 8, 12, 16]
+            for i,haf in enumerate(hafilters):
+                print(haf, self.haimage)
                 if haf in self.haimage:
-                    self.halpha_filter = haf
+                    self.halpha_filter = hanumber[i]
                     break
+        print()
+        print("pointing halpha filter = ",self.halpha_filter, self.haimage)
+        print()
 
-                
+        
         self.csimage = None
         if haimage is not None:
             csimage = haimage.replace('.fits','-CS.fits')
@@ -668,7 +669,10 @@ class pointing():
 
         # this will set flags to False if psf images DNE
         self.build_psf_names()
-            
+
+        print("getting galaxies in FOV")                
+        self.get_galaxies_fov()
+        
         print("getting rband image")        
         self.get_rband_image()
         print()
@@ -729,7 +733,17 @@ class pointing():
         else:
             self.hapsf_flag=False
             print('could not find ha psf image: ',self.hapsf_image)            
-      
+
+    def get_galaxies_fov(self):
+        imx,imy,keepflag = buildweb.get_galaxies_fov(self.rimage,self.cat['RA'],self.cat['DEC'])
+        
+        print("number of galaxies in FOV = ",np.sum(keepflag))
+        self.galfov_imx = imx[keepflag]
+        self.galfov_imy = imy[keepflag]
+        # where are we cutting based on filter redshift?        
+        # need to cut to keep the galaxies within the right filter
+        self.keepflag = keepflag        
+            
 
     def get_rband_image(self):
         ''' initiate an instance of coadd image class '''
@@ -738,14 +752,13 @@ class pointing():
             outprefix = self.outdir
             filter='r'
             if self.rpsf_flag:
-                self.r = coadd_image(self.rimage,psfimage=self.rpsf_image,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat)
+                self.r = coadd_image(self.rimage,psfimage=self.rpsf_image,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
             else:
-                self.r = coadd_image(self.rimage,psfimage=None,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat)
+                self.r = coadd_image(self.rimage,psfimage=None,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
             self.rcoadd_flag=True
             self.r.generate_plots()
         else:
             self.rcoadd_flag=False
-        
     
     def get_halpha_image(self):
         ''' initiate an instance of coadd image class '''
@@ -753,9 +766,9 @@ class pointing():
             outprefix = self.outdir
             filter='ha'
             if self.hapsf_flag:
-                self.ha = coadd_image(self.haimage,psfimage=self.hapsf_image,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat)
+                self.ha = coadd_image(self.haimage,psfimage=self.hapsf_image,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
             else:
-                self.ha = coadd_image(self.haimage,psfimage=None,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat)
+                self.ha = coadd_image(self.haimage,psfimage=None,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
             self.hacoadd_flag=True
             self.ha.generate_plots()
         else:
@@ -768,7 +781,7 @@ class pointing():
         if os.path.exists(self.csimage):
             outprefix = self.outdir
             filter='CS'
-            self.cs = coadd_image(self.csimage,psfimage=None,plotdir=outprefix,zpdir=None,filter=filter,cat=self.cat)
+            self.cs = coadd_image(self.csimage,psfimage=None,plotdir=outprefix,zpdir=None,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
             print('\tmaking cs plots')
             self.cs.generate_plots()            
             self.cscoadd_flag=True
@@ -785,7 +798,7 @@ class pointing():
         if (self.czimage is not None) and os.path.exists(self.czimage):
             outprefix = self.outdir
             filter='CS'
-            self.cz = coadd_image(self.czimage,psfimage=None,plotdir=outprefix,zpdir=None,filter=filter,cat=self.cat)
+            self.cz = coadd_image(self.czimage,psfimage=None,plotdir=outprefix,zpdir=None,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
             self.cz.generate_plots()
             self.czcoadd_flag=True
             print()
@@ -799,7 +812,7 @@ class pointing():
         redshift = self.cat['vr'][self.keepflag]/3.e5
         # for rband filter, get the HAIMAGE field name
         myfilter = ft.filter_trace(self.halpha_filter)
-        self.gals_filter_png = os.path.join(self.plotdir,'galaxies_in_filter.png')
+        self.gals_filter_png = os.path.join(self.outdir,'galaxies_in_filter.png')
         corrections = myfilter.get_trans_correction(redshift,outfile=self.gals_filter_png)
         filter_keepflag = corrections < 10 # this is a crazy big cut, but we can adjust with halphagui
         self.corrections = corrections[filter_keepflag]
@@ -819,10 +832,10 @@ class pointing():
 
         
         # loop over galaxies in FOV
-        gindex=np.arange(len(self.r.galfov_imx))
-        galnames = Table(self.r.cat)['prefix'][self.r.keepflag]
-        galra = Table(self.r.cat)['RA'][self.r.keepflag]
-        galdec = Table(self.r.cat)['DEC'][self.r.keepflag]        
+        gindex=np.arange(len(self.galfov_imx))
+        galnames = Table(self.cat)['prefix'][self.keepflag]
+        galra = Table(self.cat)['RA'][self.keepflag]
+        galdec = Table(self.cat)['DEC'][self.keepflag]        
 
         ##
         # set size to 2.5 time size in coadd images
@@ -916,7 +929,7 @@ class pointing():
                 print("\nProblem getting legacy jpg - maybe the server is down?")
                 self.gal_cutout_figname = None
                 jpeg_name = None
-            position = (self.r.galfov_imx[j],self.r.galfov_imy[j])                
+            position = (self.galfov_imx[j],self.galfov_imy[j])                
             for k in range(len(images)):
                 #print("displaying cutout ",imtitles[k],imsize)
                 if images[k] is None:
@@ -947,15 +960,21 @@ class pointing():
         # need to construct plot name from the halpha image
 
         # for example: *Halpha-filter-ratio.png
-        plotname = os.path.basename(self.rimage.replace('.fits','-filter-ratio.png'))
+        plotname = os.path.basename(self.haimage.replace('.fits','-filter-ratio.png'))
 
         filename = os.path.join(plotdir,plotname)
-        #print("looking for filter ratio plot ",filename)
+        print("looking for filter ratio plot ",filename)
+        print( f'cp {filename} {os.path.join(self.outdir,os.path.basename(filename))}')
+        s = f'cp {filename} {os.path.join(self.outdir,os.path.basename(filename))}'
+        os.system(s)
+        
         if os.path.exists(filename):
+            print("copying filter ratio plot")
             s = f'cp {filename} {os.path.join(self.outdir,os.path.basename(filename))}'
             os.system(s)
             self.filter_ratio_plot = os.path.basename(filename)
         else:
+            print("error copying filter ratio plot")            
             self.filter_ratio_plot = None
         
 
@@ -1101,7 +1120,11 @@ class build_html_pointing():
                 self.write_ha_zp()
         except:
             print("problem writing halpha zp for ",self.pointing.pointing_name)
+            
 
+        self.write_cs_header()
+        self.write_cs_table()
+            
         try:
             self.write_cs_header()
             self.write_cs_table()
@@ -1203,7 +1226,7 @@ class build_html_pointing():
             self.html.write('<td>{:.0f}</td>\n'.format(g['v21']))            
             
             try:
-                self.html.write('<td>{:.2f}</td>\n'.format(self.pointing.ha.corrections[i]))
+                self.html.write('<td>{:.2f}</td>\n'.format(self.pointing.corrections[i]))
             except IndexError:
                 print("WARNING: size mismatch between r and halpha catalogs!!!")
             except AttributeError:
@@ -1320,6 +1343,7 @@ class build_html_pointing():
         if self.pointing.cz.coadd_png is not None:
             images.append(os.path.basename(self.pointing.cs.coadd_png))
             labels.append('Cont-Sub Image w/ZPs')
+        print("\nin write_cs_table, self.pointing.filter_ratio_plot = ",self.pointing.filter_ratio_plot)
         images.append(os.path.basename(self.pointing.filter_ratio_plot))
         labels.append('Filter Ratio')
         buildweb.write_table(self.html,labels=labels,images=images,images2=None)
@@ -1477,12 +1501,18 @@ if __name__ == '__main__':
             print(f"Could not find {args.oneimage} - please check the r-band coadd name you provided")
             sys.exit()
         # find index in rfiles that corresponds to image
+        coadd_index = rfiles.index(os.path.join(args.coaddir,args.oneimage))
+        indices = [np.arange(len(rfiles))[coadd_index]]
+        print('when selecting one image, indices = ',indices,rfiles[indices[0]])
+        buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
+        
         try:
             coadd_index = rfiles.index(args.oneimage)
             indices = [np.arange(len(rfiles))[coadd_index]]
             print('when selecting one image, indices = ',indices,rfiles[indices[0]])
             buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
         except ValueError:
+            print("error runnning buildone")
             rfiles = [args.oneimage]
             indices = np.arange(len(rfiles))
  
