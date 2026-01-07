@@ -55,7 +55,7 @@ from scipy.stats import scoreatpercentile
 import sys
 
 
-def plot_results(ha, r, cs, vmin = .5, vmax = 98):
+def plot_results(ha, r, cs, vmin = .5, vmax = 98, interactive=False):
         
     v1,v2=scoreatpercentile(ha,[vmin,vmax])#.5,99
     
@@ -79,7 +79,8 @@ def plot_results(ha, r, cs, vmin = .5, vmax = 98):
     plt.imshow(cs,origin='lower',cmap='gray_r',vmin=v1,vmax=v2)
     plt.gca().set_yticks(())
     plt.title('contsub, scale = %4.4f'%(scale))
-    plt.show(block=False)
+    if interactive:
+        plt.show(block=False)
     return fig
 
 def write_cs_image(cs,ha_header,outimage,fig=None):
@@ -170,7 +171,7 @@ cs = ha - scale*r
 
 if not args.interactive:
     # plot the results
-    fig = plot_results(ha, r, cs)
+    fig = plot_results(ha, r, cs, interactive=args.interactive)
     
     # write out results
     write_cs_image(cs,ha_header,outimage,fig=fig)    
