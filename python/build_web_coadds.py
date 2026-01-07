@@ -850,8 +850,10 @@ class pointing():
         ##
         # set size to 2.5 time size in coadd images
         ##
+        mindiam = 20
         galsizes = Table(self.cat)['radius'][self.keepflag]*2
-        
+        badsize_flag = galsizes < mindiam
+        galsizes[badsize_flag] = mindiam
         #galsizes = size#self.rcat['radius']/.4*2
         if 'INT' in self.rimage:
             pixscale = 0.333
