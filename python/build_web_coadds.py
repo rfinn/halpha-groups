@@ -922,8 +922,8 @@ class pointing():
             # get legacy cutout
             # TODO - finish this next line
             ax = plt.subplot(nrow,ncol,5*j+1)
-            #print(f"\nimage cutout size = {imsize_arcsec:.1f} arcsec.  Does that seem reasonable?  If not, check units of a from AGC.\n")
-            jpeg_name = get_legacy_jpg(galra[j],galdec[j],galid=galnames[j],pixscale=1,imsize=imsize_arcsec,subfolder=self.outdir)            
+            print(f"\nimage cutout size = {imsize_arcsec:.1f} arcsec.  Does that seem reasonable?  If not, check units of a from AGC.\n")
+            #jpeg_name = get_legacy_jpg(galra[j],galdec[j],galid=galnames[j],pixscale=1,imsize=imsize_arcsec,subfolder=self.outdir)            
             try:
                 # add a random pause before calling legacy
                 random_pause()
@@ -941,6 +941,7 @@ class pointing():
                 
             except urllib.error.HTTPError:
                 print("\nProblem getting legacy jpg - maybe the server is down?")
+                print(f"\t legacy call:\n{galra[j]},{galdec[j]},galid={galnames[j]},pixscale=1,imsize={imsize_arcsec},subfolder={self.outdir}")
                 self.gal_cutout_figname = None
                 jpeg_name = None
             position = (self.galfov_imx[fulltab_index_galfov[j]],self.galfov_imy[fulltab_index_galfov[j]])
