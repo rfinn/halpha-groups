@@ -5,7 +5,7 @@ GOAL:
 * create index web page that points to html pages for all cutouts 
 
 USAGE:
-* run from html-dev/cutouts directory
+* run from html-dev/coadds directory
 
 NOTES:
 * using John Moustakas's code as a reference (https://github.com/moustakas/legacyhalos/blob/main/py/legacyhalos/virgofilaments.py#L1131-L1202)
@@ -130,19 +130,7 @@ class build_html_coadd():
 if __name__ == '__main__':
     # work through coadd directory
     #global vmain
-
-    VFMAIN_PATH = homedir+'/research/Virgo/tables-north/v2/vf_v2_main.fits'
-    vfmain = fits.getdata(VFMAIN_PATH)
-    
-    #VFFIL_PATH = homedir+'/research/Virgo/tables-north/v2/vf_north_v1_main_filament_membership_allgalaxies.fits'
-    VFFIL_PATH = homedir+'/research/Virgo/tables-north/v2/vf_v2_environment.fits'    
-    vffil = fits.getdata(VFFIL_PATH)
-    
-    #outdir = homedir+'/research/Virgo-dev/html-dev/coadds/'
-    outdir = '/data-pool/Halpha/html_dev/coadds/'    
-    #outdir = '/home/rfinn/Virgo-dev/html-dev/coadds/'    
-
-    # this should contain a list of all the galaxy folders
+    outdir = os.getcwd()
     flist1 = os.listdir(outdir)
     flist1.sort()
     #print(flist1)
