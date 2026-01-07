@@ -796,8 +796,8 @@ class pointing():
             self.cscoadd_flag=True
             #print()
             #print('getting galaxy cutouts')
-            print('\tcs image getting gal cutouts')            
-            self.get_gal_cutouts()
+            #print('\tcs image getting gal cutouts')            
+            #self.get_gal_cutouts()
         else:
             self.cscoadd_flag=False
             print('could not find CS ha image : ',self.csimage)
@@ -811,8 +811,8 @@ class pointing():
             self.cz.generate_plots()
             self.czcoadd_flag=True
             print()
-            print('getting cz galaxy cutouts')
-            self.get_gal_cutouts()
+            #print('getting cz galaxy cutouts')
+            #self.get_gal_cutouts()
         else:
             self.czcoadd_flag=False
             print('could not find ZP CS ha image : ',self.czimage)
@@ -924,7 +924,7 @@ class pointing():
             # get legacy cutout
             # TODO - finish this next line
             ax = plt.subplot(nrow,ncol,5*j+1)
-            print(f"\nimage cutout size = {imsize_arcsec:.1f} arcsec.  Does that seem reasonable?  If not, check units of a from AGC.\n")
+            #print(f"\nimage cutout size = {imsize_arcsec:.1f} arcsec.  Does that seem reasonable?  If not, check units of a from AGC.\n")
             #jpeg_name = get_legacy_jpg(galra[j],galdec[j],galid=galnames[j],pixscale=1,imsize=imsize_arcsec,subfolder=self.outdir)            
             try:
                 # add a random pause before calling legacy
