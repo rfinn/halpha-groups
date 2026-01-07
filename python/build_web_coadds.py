@@ -738,11 +738,12 @@ class pointing():
         imx,imy,keepflag = buildweb.get_galaxies_fov(self.rimage,self.cat['RA'],self.cat['DEC'])
         
         print("number of galaxies in FOV = ",np.sum(keepflag))
-        self.galfov_imx = imx[keepflag]
-        self.galfov_imy = imy[keepflag]
+        self.galfov_imx = imx#[keepflag]
+        self.galfov_imy = imy#[keepflag]
         # where are we cutting based on filter redshift?        
         # need to cut to keep the galaxies within the right filter
-        self.keepflag = keepflag        
+        self.keepflag = keepflag
+        #self.keepflag = keepflag[keepflag]        
             
 
     def get_rband_image(self):
@@ -755,6 +756,7 @@ class pointing():
                 self.r = coadd_image(self.rimage,psfimage=self.rpsf_image,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
             else:
                 self.r = coadd_image(self.rimage,psfimage=None,plotdir=outprefix,zpdir=self.zpdir,filter=filter,cat=self.cat,imx=self.galfov_imx,imy=self.galfov_imy,keepflag=self.keepflag)
+            print("in get_rband_image, imx, imy, keepflag lengths = ",len(self.galfov_imx), len(self.galfov_imy), len(self.keepflag))
             self.rcoadd_flag=True
             self.r.generate_plots()
         else:
@@ -833,7 +835,7 @@ class pointing():
 
         
         # loop over galaxies in FOV
-        gindex=np.arange(len(self.galfov_imx))
+        gindex=np.arange(np.sum(self.keepflag))
         galnames = Table(self.cat)['prefix'][self.keepflag]
         galra = Table(self.cat)['RA'][self.keepflag]
         galdec = Table(self.cat)['DEC'][self.keepflag]        
@@ -841,7 +843,7 @@ class pointing():
         ##
         # set size to 2.5 time size in coadd images
         ##
-        galsizes = Table(self.r.cat)['radius'][self.r.keepflag]*2
+        galsizes = Table(self.cat)['radius'][self.keepflag]*2
         
         #galsizes = size#self.rcat['radius']/.4*2
         if 'INT' in self.rimage:
@@ -895,11 +897,12 @@ class pointing():
 
         # columns: legacy, r, halpha, cs, CS-zp
         ncol = 5
-        nrow = np.sum(self.r.keepflag)
+        nrow = np.sum(self.keepflag)
         # change to one row per galaxy
-        figsize = (12,3*np.sum(self.r.keepflag))            
+        figsize = (12,3*np.sum(self.keepflag))            
         plt.figure(figsize=figsize)
-        plt.subplots_adjust(top=.95,right=.95,left=.05,bottom=.05)        
+        plt.subplots_adjust(top=.95,right=.95,left=.05,bottom=.05)
+        fulltab_index_galfov = np.arange(len(self.keepflag))[self.keepflag]
         for j in range(len(galra)):
             #print(sizes[j][0])
             try:
@@ -930,7 +933,7 @@ class pointing():
                 print("\nProblem getting legacy jpg - maybe the server is down?")
                 self.gal_cutout_figname = None
                 jpeg_name = None
-            position = (self.galfov_imx[j],self.galfov_imy[j])                
+            position = (self.galfov_imx[fulltab_index_galfov[j]],self.galfov_imy[fulltab_index_galfov[j]])
             for k in range(len(images)):
                 #print("displaying cutout ",imtitles[k],imsize)
                 if images[k] is None:
@@ -1499,22 +1502,26 @@ if __name__ == '__main__':
         if not os.path.exists(args.oneimage):
             print(f"Could not find {args.oneimage} - please check the r-band coadd name you provided")
             sys.exit()
-        # find index in rfiles that corresponds to image
-        coadd_index = rfiles.index(os.path.join(args.coaddir,args.oneimage))
-        indices = [np.arange(len(rfiles))[coadd_index]]
-        print('when selecting one image, indices = ',indices,rfiles[indices[0]])
-        buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
         
-        #try:
-        #    coadd_index = rfiles.index(args.oneimage)
-        #    indices = [np.arange(len(rfiles))[coadd_index]]
-        #    print('when selecting one image, indices = ',indices,rfiles[indices[0]])
-        #    buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
-        #except ValueError:
-        #    print("error runnning buildone")
-        #    rfiles = [args.oneimage]
-        #    indices = np.arange(len(rfiles))
+        
+        try:
+            # find index in rfiles that corresponds to image
+            coadd_index = rfiles.index(args.oneimage)
+            indices = [np.arange(len(rfiles))[coadd_index]]
+            print('when selecting one image, indices = ',indices,rfiles[indices[0]])
+            buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
+        except ValueError:
+            print("error runnning buildone")
+            rfiles = [args.oneimage]
+            indices = np.arange(len(rfiles))
  
+    else:
+        for rfile in rfiles:
+            # find index in rfiles that corresponds to image
+            coadd_index = rfiles.index(os.path.join(args.coaddir,rfile))
+            indices = [np.arange(len(rfiles))[coadd_index]]
+            #print('when selecting one image, indices = ',indices,rfiles[indices[0]])
+            buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
 
     # build the web index
     #cwd = os.getcwd()
