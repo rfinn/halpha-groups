@@ -1502,8 +1502,12 @@ if __name__ == '__main__':
         if not os.path.exists(args.oneimage):
             print(f"Could not find {args.oneimage} - please check the r-band coadd name you provided")
             sys.exit()
-        
-        
+        # find index in rfiles that corresponds to image
+        coadd_index = rfiles.index(args.oneimage)
+        indices = [np.arange(len(rfiles))[coadd_index]]
+        #print('when selecting one image, indices = ',indices,rfiles[indices[0]])
+        buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
+            
         try:
             # find index in rfiles that corresponds to image
             coadd_index = rfiles.index(args.oneimage)
