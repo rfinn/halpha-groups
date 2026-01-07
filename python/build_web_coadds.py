@@ -813,6 +813,7 @@ class pointing():
         # for rband filter, get the HAIMAGE field name
         myfilter = ft.filter_trace(self.halpha_filter)
         self.gals_filter_png = os.path.join(self.outdir,'galaxies_in_filter.png')
+        #print("filter curve at: ",self.gals_filter_png)
         corrections = myfilter.get_trans_correction(redshift,outfile=self.gals_filter_png)
         filter_keepflag = corrections < 10 # this is a crazy big cut, but we can adjust with halphagui
         self.corrections = corrections[filter_keepflag]
@@ -913,7 +914,7 @@ class pointing():
             ax = plt.subplot(nrow,ncol,5*j+1)
             #print(f"\nimage cutout size = {imsize_arcsec:.1f} arcsec.  Does that seem reasonable?  If not, check units of a from AGC.\n")
             try:
-                print(f"getting legacy image: {galnames[j]}, size={imsize_arcsec:.2f}")
+                #print(f"getting legacy image: {galnames[j]}, size={imsize_arcsec:.2f}")
                 jpeg_name = get_legacy_jpg(galra[j],galdec[j],galid=galnames[j],pixscale=1,imsize=imsize_arcsec,subfolder=self.outdir)
                 #print(jpeg_name)
                 # plot jpg
@@ -963,13 +964,13 @@ class pointing():
         plotname = os.path.basename(self.haimage.replace('.fits','-filter-ratio.png'))
 
         filename = os.path.join(plotdir,plotname)
-        print("looking for filter ratio plot ",filename)
-        print( f'cp {filename} {os.path.join(self.outdir,os.path.basename(filename))}')
+        #print("looking for filter ratio plot ",filename)
+        #print( f'cp {filename} {os.path.join(self.outdir,os.path.basename(filename))}')
         s = f'cp {filename} {os.path.join(self.outdir,os.path.basename(filename))}'
         os.system(s)
         
         if os.path.exists(filename):
-            print("copying filter ratio plot")
+            #print("copying filter ratio plot")
             s = f'cp {filename} {os.path.join(self.outdir,os.path.basename(filename))}'
             os.system(s)
             self.filter_ratio_plot = os.path.basename(filename)
@@ -1059,7 +1060,7 @@ class pointing():
 class build_html_pointing():
 
     def __init__(self,pointing,outdir,next=None,previous=None):
-        print("in build_html_pointing")
+        #print("in build_html_pointing")
         self.pointing = pointing
         outfile = self.pointing.pointing_name+'.html'
         outfile = os.path.join(outdir,outfile)
@@ -1122,8 +1123,6 @@ class build_html_pointing():
             print("problem writing halpha zp for ",self.pointing.pointing_name)
             
 
-        self.write_cs_header()
-        self.write_cs_table()
             
         try:
             self.write_cs_header()
@@ -1253,7 +1252,7 @@ class build_html_pointing():
         try:
             images=[os.path.basename(self.pointing.position_plot),\
                     os.path.basename(self.pointing.position_plot_zoom),\
-                    os.path.basename(self.pointing.ha.gals_filter_png)]
+                    os.path.basename(self.pointing.gals_filter_png)]
             buildweb.write_table(self.html,labels=labels,images=images,images2=None)
         except AttributeError:
             images=[os.path.basename(self.pointing.position_plot),\
@@ -1343,7 +1342,7 @@ class build_html_pointing():
         if self.pointing.cz.coadd_png is not None:
             images.append(os.path.basename(self.pointing.cs.coadd_png))
             labels.append('Cont-Sub Image w/ZPs')
-        print("\nin write_cs_table, self.pointing.filter_ratio_plot = ",self.pointing.filter_ratio_plot)
+        #print("\nin write_cs_table, self.pointing.filter_ratio_plot = ",self.pointing.filter_ratio_plot)
         images.append(os.path.basename(self.pointing.filter_ratio_plot))
         labels.append('Filter Ratio')
         buildweb.write_table(self.html,labels=labels,images=images,images2=None)
@@ -1506,15 +1505,15 @@ if __name__ == '__main__':
         print('when selecting one image, indices = ',indices,rfiles[indices[0]])
         buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
         
-        try:
-            coadd_index = rfiles.index(args.oneimage)
-            indices = [np.arange(len(rfiles))[coadd_index]]
-            print('when selecting one image, indices = ',indices,rfiles[indices[0]])
-            buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
-        except ValueError:
-            print("error runnning buildone")
-            rfiles = [args.oneimage]
-            indices = np.arange(len(rfiles))
+        #try:
+        #    coadd_index = rfiles.index(args.oneimage)
+        #    indices = [np.arange(len(rfiles))[coadd_index]]
+        #    print('when selecting one image, indices = ',indices,rfiles[indices[0]])
+        #    buildone(rfiles,coadd_index,coadd_dir,psfdir,zpdir,fratiodir,cat=vmain)
+        #except ValueError:
+        #    print("error runnning buildone")
+        #    rfiles = [args.oneimage]
+        #    indices = np.arange(len(rfiles))
  
 
     # build the web index
