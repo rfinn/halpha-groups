@@ -59,6 +59,9 @@ import argparse
 
 from PIL import Image
 
+# adding random delay when getting legacy images
+import time
+
 
 
 homedir = os.getenv("HOME")
@@ -78,6 +81,10 @@ VRMAX = 9000
 ###########################################################
 ####  FUNCTIONS
 ###########################################################
+def random_pause(tmin=1,tmax=2):
+    pause_duration = np.random.uniform(1, 2)
+    time.sleep(pause_duration)
+
 def buildone(rimages,i,coadd_dir,psfdir,zpdir,fratiodir,cat=None):
     """ code to build webpage for one coadd """    
     rimage = rimages[i]
@@ -916,7 +923,10 @@ class pointing():
             # TODO - finish this next line
             ax = plt.subplot(nrow,ncol,5*j+1)
             #print(f"\nimage cutout size = {imsize_arcsec:.1f} arcsec.  Does that seem reasonable?  If not, check units of a from AGC.\n")
+            jpeg_name = get_legacy_jpg(galra[j],galdec[j],galid=galnames[j],pixscale=1,imsize=imsize_arcsec,subfolder=self.outdir)            
             try:
+                # add a random pause before calling legacy
+                random_pause()
                 #print(f"getting legacy image: {galnames[j]}, size={imsize_arcsec:.2f}")
                 jpeg_name = get_legacy_jpg(galra[j],galdec[j],galid=galnames[j],pixscale=1,imsize=imsize_arcsec,subfolder=self.outdir)
                 #print(jpeg_name)
