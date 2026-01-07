@@ -850,7 +850,7 @@ class pointing():
         ##
         # set size to 2.5 time size in coadd images
         ##
-        mindiam = 20
+        mindiam = 10
         galsizes = Table(self.cat)['radius'][self.keepflag]*2
         badsize_flag = galsizes < mindiam
         galsizes[badsize_flag] = mindiam
