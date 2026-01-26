@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # loop over images
     #############################################################
     for fname in allfilelist:
-
+        print(f"Working on {fname}")
     
         #############################################################
         # get galaxies in footprint
@@ -123,6 +123,8 @@ if __name__ == '__main__':
 
         groupcat['imagename'][keepflag] = os.path.basename(fname)
 
+        # TODO - if imagename is already populated, save as imagename2
+        # but do we also then need to save instrument2, rfilter2, hafilter2, in case they are different?
         #############################################################
         # save parent image name, halpha filter
         #############################################################
@@ -134,6 +136,13 @@ if __name__ == '__main__':
 
     
         rheader = fits.getheader(fname)
+        try:
+            haimage = rheader['HAIMAGE']
+        except KeyError:
+            print("WARNING: no HAIMAGE in header of ", fname)
+            print("continuing to next image...")
+            continue
+                      
         instrument, hafilter = parse_uat_coadd_name(rheader['HAIMAGE'])
         groupcat['hafilter'][keepflag] = hafilter
 
