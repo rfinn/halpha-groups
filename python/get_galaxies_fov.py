@@ -102,8 +102,8 @@ if __name__ == '__main__':
     #############################################################
     # loop over images
     #############################################################
-    for fname in allfilelist:
-        print(f"Working on {fname}")
+    for i,fname in enumerate(allfilelist):
+        print(f"Working on ({i}/{len(allfilelist)}) {fname}")
     
         #############################################################
         # get galaxies in footprint
