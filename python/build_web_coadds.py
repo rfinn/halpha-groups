@@ -1467,7 +1467,7 @@ if __name__ == '__main__':
         radius = agc['a']/2*60 # agc['a'] is the blue major diam in arcmin
 
         # add a default size for galaxies that         
-        badsize_flag = galsizes < MINRADIUS
+        badsize_flag = radius < MINRADIUS
         radius[badsize_flag] = MINRADIUS
         
         c0 = Column(radius,name='radius')
