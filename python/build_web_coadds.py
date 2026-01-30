@@ -77,7 +77,7 @@ OVERWRITE = False
 VERBOSE = False
 
 VRMAX = 9000
-
+MINRADIUS = 30 # min cutout size will be 30" radius or 60" diam
 ###########################################################
 ####  FUNCTIONS
 ###########################################################
@@ -166,7 +166,6 @@ def buildone(rimages,i,coadd_dir,psfdir,zpdir,fratiodir,cat=None):
     #print(poutdir)
     p = pointing(rimage=rimage,haimage=haimage,psfdir=psfdir,zpdir=zpdir,fratiodir = fratiodir, outdir=poutdir, cat=cat)
     h = build_html_pointing(p,outdir=poutdir,next=next,previous=previous)
-
     #try:
     #     p = pointing(rimage=rimage,haimage=haimage,psfdir=psfdir,zpdir=zpdir,outdir=poutdir)
     #     h = build_html_pointing(p,outdir=poutdir,next=next,previous=previous)
@@ -850,10 +849,8 @@ class pointing():
         ##
         # set size to 2.5 time size in coadd images
         ##
-        mindiam = 10
+
         galsizes = Table(self.cat)['radius'][self.keepflag]*2
-        badsize_flag = galsizes < mindiam
-        galsizes[badsize_flag] = mindiam
         #galsizes = size#self.rcat['radius']/.4*2
         if 'INT' in self.rimage:
             pixscale = 0.333
@@ -1462,7 +1459,12 @@ if __name__ == '__main__':
         c0 = Column(np.zeros(len(vmain),'bool'),name='COflag')
         vmain.add_column(c0)
 
-        radius = agc['a']/2*60
+        radius = agc['a']/2*60 # agc['a'] is the blue major diam in arcmin
+
+        # add a default size for galaxies that         
+        badsize_flag = galsizes < MINRADIUS
+        radius[badsize_flag] = MINRADIUS
+        
         c0 = Column(radius,name='radius')
         vmain.add_column(c0)
 
