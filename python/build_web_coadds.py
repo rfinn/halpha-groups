@@ -1500,8 +1500,9 @@ if __name__ == '__main__':
         # get list of r-band coadded images
         print(f"looking for: {os.path.join(coadd_dir,'*R.fits')}")
         a = glob.glob(os.path.join(coadd_dir,'*R.fits'))
-        #b = glob.glob(os.path.join(coadd_dir,'*R.coadd-shifted.fits'))        
-        rfiles = a #+ b
+        b = glob.glob(os.path.join(coadd_dir,'*r.fits'))        
+        rfiles = a + b
+
         
         # changing this b/c I now store the halpha image name in the r-band header
         #halpha_names = ['ha4','Halpha','Ha6657','Ha4']        
@@ -1513,8 +1514,10 @@ if __name__ == '__main__':
 
         
     #hfiles.sort()
+    
+    # sort these so they are ordered by RA 
     rfiles.sort()
-    print(rfiles)
+    #print(rfiles)
     # just use one image if the argument flag was set
 
     if args.oneimage is not None:
