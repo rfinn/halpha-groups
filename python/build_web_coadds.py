@@ -824,10 +824,15 @@ class pointing():
         #print("filter curve at: ",self.gals_filter_png)
         corrections = myfilter.get_trans_correction(redshift,outfile=self.gals_filter_png)
         filter_keepflag = corrections < 10 # this is a crazy big cut, but we can adjust with halphagui
-        self.corrections = corrections[filter_keepflag]
+        #filter_keepflag = np.ones(len(redshift)
+
+        # skipping cut now to see if this is an issue in building table
+        #self.corrections = corrections[filter_keepflag]
+        #self.keepflag[self.keepflag] = filter_keepflag
+        self.corrections = corrections
         print()
         print(f"number of galaxies before filter cut = {np.sum(self.keepflag)}")
-        self.keepflag[self.keepflag] = filter_keepflag
+        
         print(f"number of galaxies AFTER filter cut = {np.sum(self.keepflag)}")        
         #self.gals_filter_png = os.path.join(self.plotdir,'galaxies_in_filter.png')
         #os.rename('galaxies_in_filter.png',self.gals_filter_png)
@@ -999,7 +1004,7 @@ class pointing():
         self.vffil = vffil[self.r.keepflag]
 
     def write_gal_table(self):
-        """ write out a list of with galaxies in FOV """
+        """ write out a list with galaxies in FOV """
         # this will be good for checking which galaxies are observed in Halpha
         # in a way that is independent of running the halpha gui
         # just need the VFIDs
