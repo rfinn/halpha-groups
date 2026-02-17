@@ -838,20 +838,7 @@ class pointing():
 
     def get_gredshift_filter_curve(self):
         redshift = self.cat['vr'][self.keepflag]/3.e5
-        header_filter = self.imheader['FILTER']
-        #print('filter from header = ',header_filter,self.filter)
-        if header_filter.find('ha4') > -1:
-            filter=4
-        elif header_filter.find('Ha+4nm') > -1:
-            # TODO - need to check that this is in fact the same filter as on HDI
-            filter=4
-        elif header_filter.find('Ha4nm') > -1:
-            # TODO - need to check that this is in fact the same filter as on HDI
-            filter=4
-        elif header_filter.find('Ha6657') > -1:
-            filter='intha6657'
-        elif header_filter.find('Halpha') > -1:
-            filter='inthalpha'
+
 
         myfilter = ft.filter_trace(self.halpha_filter, instrument=self.instrument)
 
