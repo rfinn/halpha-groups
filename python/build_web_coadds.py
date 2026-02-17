@@ -321,7 +321,27 @@ class coadd_image():
 
         self.imx = imx
         self.imy = imy
-        self.keepflag = keepflag 
+        self.keepflag = keepflag
+
+        self.get_instrument()
+        self.get_filter()
+
+    def get_instrument(self):
+        instruments = ['BOK','HDI','INT','MOS']
+        for i in instruments:
+            if i in self.imagename:
+                self.instrument = i
+                break
+
+    def get_filter(self):
+        imheader = fits.getheader(self.imagename)
+        
+        try:
+            filter = imheader['FILTER']
+        except KeyError:
+            print("WARNING: did not find FILTER keyword in header for ",self.imagename)
+            filter = None
+        
     def generate_plots(self):
         self.get_image()
         self.make_coadd_png()
@@ -818,8 +838,26 @@ class pointing():
 
     def get_gredshift_filter_curve(self):
         redshift = self.cat['vr'][self.keepflag]/3.e5
+        header_filter = self.imheader['FILTER']
+        #print('filter from header = ',header_filter,self.filter)
+        if header_filter.find('ha4') > -1:
+            filter=4
+        elif header_filter.find('Ha+4nm') > -1:
+            # TODO - need to check that this is in fact the same filter as on HDI
+            filter=4
+        elif header_filter.find('Ha4nm') > -1:
+            # TODO - need to check that this is in fact the same filter as on HDI
+            filter=4
+        elif header_filter.find('Ha6657') > -1:
+            filter='intha6657'
+        elif header_filter.find('Halpha') > -1:
+            filter='inthalpha'
+
+        myfilter = ft.filter_trace(self.halpha_filter, instrument=self.instrument)
+
+        
         # for rband filter, get the HAIMAGE field name
-        myfilter = ft.filter_trace(self.halpha_filter)
+        #myfilter = ft.filter_trace(self.halpha_filter)
         self.gals_filter_png = os.path.join(self.outdir,'galaxies_in_filter.png')
         #print("filter curve at: ",self.gals_filter_png)
         corrections = myfilter.get_trans_correction(redshift,outfile=self.gals_filter_png)
