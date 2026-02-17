@@ -328,10 +328,13 @@ class coadd_image():
 
     def get_instrument(self):
         instruments = ['BOK','HDI','INT','MOS']
+        self.instrument = None
         for i in instruments:
             if i in self.imagename:
                 self.instrument = i
                 break
+        if self.instrument == None:
+            print(f'WARNING: could not find instrument for {self.imagename}')
 
     def get_filter(self):
         imheader = fits.getheader(self.imagename)
@@ -840,7 +843,7 @@ class pointing():
         redshift = self.cat['vr'][self.keepflag]/3.e5
 
 
-        myfilter = ft.filter_trace(self.halpha_filter, instrument=self.instrument)
+        myfilter = ft.filter_trace(self.halpha_filter, instrument=self.ha.instrument)
 
         
         # for rband filter, get the HAIMAGE field name
