@@ -1486,7 +1486,8 @@ if __name__ == '__main__':
         agc = Table.read(os.getenv("HOME")+'/research/AGC/agcnorthminus1.full200617.fits')
 
         vr = agc['vopt']
-        usev21 = vr == 0
+        usev21 = (vr == 0)
+        print(f"number of gals with vr == 0 = {np.sum(usev21)}")
         vr[usev21] = agc['v21'][usev21]
         
         #vmain = Table([agc['AGCnr'],agc['AGCnr'],agc['radeg'],agc['decdeg'],agc['vopt'],agc['v21'],agc['ngcic']], names=['prefix','GALID','RA','DEC','vr','v21','NEDname'])
